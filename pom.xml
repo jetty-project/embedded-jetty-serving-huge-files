@@ -31,6 +31,7 @@
     <license.plugin.version>4.1</license.plugin.version>
 
     <jetty.version>9.4.46.v20220331</jetty.version>
+    <junit.version>5.8.2</junit.version>
   </properties>
 
   <dependencies>
@@ -40,9 +41,10 @@
       <version>${jetty.version}</version>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
