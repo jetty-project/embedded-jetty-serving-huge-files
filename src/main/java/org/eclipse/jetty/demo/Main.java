@@ -30,56 +30,69 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.PathResource;
-import org.eclipse.jetty.util.resource.Resource;
 
 public class Main
 {
+    public Server server;
+    public Path baseResourceDir;
+
     public static void main(String[] args) throws Exception
     {
         Main main = new Main();
-        Server server = main.createServer();
+        Server server = main.createServer(888);
         server.start();
         server.join();
     }
 
-    public Server server;
-    public Path baseResourcePath;
-
-    public Server createServer() throws IOException
+    public Server createServer(int port) throws IOException
     {
-        server = new Server(8888);
+        server = new Server(port);
+        initBaseDirs();
 
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
-        context.setBaseResource(getBaseResource());
+        context.setBaseResource(new PathResource(baseResourceDir));
 
         ServletHolder defHolder = new ServletHolder("default", DefaultServlet.class);
         context.addServlet(defHolder, "/");
 
+        ServletHolder filesHolder = context.addServlet(MyFileServlet.class, "/files/*");
+        filesHolder.setInitParameter("baseDir", baseResourceDir.toString());
+
         HandlerList handlers = new HandlerList();
         handlers.addHandler(context);
-        handlers.addHandler(new DefaultHandler()); // to report (in html) any issues serving request in prior contexts
+        handlers.addHandler(new DefaultHandler()); // to report any issues serving request in prior contexts
 
         server.setHandler(handlers);
         return server;
     }
 
+    public Path getBaseResourceDir()
+    {
+        return this.baseResourceDir;
+    }
+
+    public Server getServer()
+    {
+        return this.server;
+    }
+
+    private void ensureDirExists(Path path) throws IOException
+    {
+        if (!Files.exists(path))
+        {
+            Files.createDirectories(path);
+        }
+    }
+
     /**
-     * Get the Resource representing the Base Resource for the Root Context
+     * Init directories
      */
-    private Resource getBaseResource() throws IOException
+    private void initBaseDirs() throws IOException
     {
         Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
         Path workDir = tempDir.resolve("jetty-huge-work");
-
-        if (!Files.exists(workDir))
-        {
-            Files.createDirectories(workDir);
-        }
-
-        baseResourcePath = workDir;
-        System.err.println("Using base resource of : " + workDir);
-
-        return new PathResource(workDir);
+        ensureDirExists(workDir);
+        baseResourceDir = workDir;
     }
 }
